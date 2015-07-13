@@ -5,7 +5,6 @@ require 'json'
 MAX_RESOURCE_TYPE_LENGTH   = 44
 MAX_RESOURCE_STATUS_LENGTH = 44 # guesswork
 
-
 $should_exit = false
 trap("SIGINT") do
   $should_exit = true

@@ -1,4 +1,0 @@
-ansible==1.9.1
-boto==2.36.0
-awscli==1.7.28
-python-magic==0.4.6
