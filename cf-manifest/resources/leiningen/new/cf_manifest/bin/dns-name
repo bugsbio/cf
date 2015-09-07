@@ -1,0 +1,8 @@
+#!/usr/bin/env ruby
+
+require 'json'
+
+instance_name = ARGV[0]
+response      = JSON.parse `aws ec2 describe-instances --filters Name=tag:Name,Values=#{instance_name}`
+
+puts response["Reservations"].flat_map{ |r| r["Instances"] }.select{|i| i["State"]["Name"] == "running" }.first["PublicDnsName"]

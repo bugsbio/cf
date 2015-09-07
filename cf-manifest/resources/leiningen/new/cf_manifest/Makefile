@@ -1,6 +1,6 @@
-STACK        = bugs-infra
+STACK        = {{name}}
 S3_ENDPOINT  = s3-eu-west-1.amazonaws.com
-S3_BUCKET    = bugs-cf
+S3_BUCKET    = {{name}}
 GIT_SHA      = $$(git rev-parse --short HEAD)
 TEMPLATE_URL = https://$(S3_ENDPOINT)/$(S3_BUCKET)/$(STACK)-$(GIT_SHA).json
 APP_ENV     ?= dev

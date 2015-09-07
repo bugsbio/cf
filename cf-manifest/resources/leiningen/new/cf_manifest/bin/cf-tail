@@ -1,0 +1,64 @@
+#!/usr/bin/env ruby
+
+require 'json'
+
+MAX_RESOURCE_TYPE_LENGTH   = 44
+MAX_RESOURCE_STATUS_LENGTH = 44 # guesswork
+
+$should_exit = false
+trap("SIGINT") do
+  $should_exit = true
+  puts "exiting"
+end
+
+module CFTail
+  extend self
+
+  def colorize(color_code, text)
+    "\e[#{color_code}m#{text}\e[0m"
+  end
+
+  def events
+    @events ||= {}
+  end
+
+  def uneasy_sleep(n)
+    sleep 1 and uneasy_sleep(n -1 ) if n > 0 and not $should_exit
+  end
+
+  def run!(stack_name)
+    until $should_exit do
+      batch = JSON.parse(`aws cloudformation describe-stack-events --stack-name #{stack_name}`)['StackEvents'].take_while {|event| events[event['EventId']].nil? }.reverse
+
+      batch.each do |event|
+        events[event['EventId']] = event
+        puts
+        print colorize(36, event["ResourceType"].ljust(MAX_RESOURCE_TYPE_LENGTH))
+        print " "
+        print colorize(38, event["LogicalResourceId"])
+        puts
+        status_color = case event["ResourceStatus"]
+          when /(FAILED|ROLLBACK)/ then 31
+          when /PROGRESS/          then 33
+          when /COMPLETE/          then 32
+          else                          38
+        end
+        print colorize(status_color, event["ResourceStatus"].ljust(MAX_RESOURCE_STATUS_LENGTH))
+        print " "
+        print colorize(37, event["Timestamp"])
+
+        puts if event["ResourceStatusReason"]
+        print colorize(38, event["ResourceStatusReason"])
+        print " " if event["ResourceStatusReason"]
+        puts
+      end
+
+      print colorize(32, ".") if batch.empty?
+      STDOUT.flush
+
+      uneasy_sleep 5
+    end
+  end
+end
+
+CFTail.run! ARGV[0]
